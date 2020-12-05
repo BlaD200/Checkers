@@ -14,7 +14,7 @@ public class Cell {
     private boolean king;
     private int position;
 
-    public boolean red() {
+    public boolean isRed() {
         return color == PlayerColor.RED;
     }
 }

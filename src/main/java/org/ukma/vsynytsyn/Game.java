@@ -10,7 +10,7 @@ public class Game {
 
         Scanner scanner = new Scanner(System.in);
         GameRed gameRed = new GameRed(scanner, semaphore);
-        GameBlack gameBlack = new GameBlack(scanner, semaphore);
+        GameBlackMiniMax gameBlack = new GameBlackMiniMax(semaphore);
 
         Thread red = new Thread(gameRed);
         Thread black = new Thread(gameBlack);
@@ -23,22 +23,22 @@ public class Game {
     }
 
 
-//    private static void redPlayer() {
-//        GameRequests red = new GameRequests();
-//        try {
-//            System.out.println("RED DATA; " + red.gameStatus());
-//            System.out.println("RED JOINS; " + red.joinGame("Team1"));
-//            System.out.println("RED MOVE; " + red.move(9, 13));
-//            redMoved.set(true);
-//            System.out.println("RED DATA; " + red.gameStatus());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    //    private static void redPlayer() {
+    //        GameRequests isRed = new GameRequests();
+    //        try {
+    //            System.out.println("RED DATA; " + isRed.gameStatus());
+    //            System.out.println("RED JOINS; " + isRed.joinGame("Team1"));
+    //            System.out.println("RED MOVE; " + isRed.move(9, 13));
+    //            redMoved.set(true);
+    //            System.out.println("RED DATA; " + isRed.gameStatus());
+    //        } catch (IOException e) {
+    //            e.printStackTrace();
+    //        }
+    //    }
 
 
-//    private static void blackPlayer() {
-//        GameRequests black = new GameRequests();
+    //    private static void blackPlayer() {
+    //        GameRequests black = new GameRequests();
 //        try {
 //            Thread.sleep(500);
 //            System.out.println("BLACK DATA; " + black.gameStatus());
