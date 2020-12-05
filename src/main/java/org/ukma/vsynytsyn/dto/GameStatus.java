@@ -1,9 +1,7 @@
 package org.ukma.vsynytsyn.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -31,6 +29,8 @@ class Cell {
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 class GameData {
     private String status;
 

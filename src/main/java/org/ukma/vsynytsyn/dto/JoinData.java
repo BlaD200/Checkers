@@ -2,15 +2,14 @@ package org.ukma.vsynytsyn.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JoinStatus {
-    private String status;
-    private JoinData data;
+public class JoinData {
+    @Getter
+    private String color;
+    private String token;
 }
-
-
-
