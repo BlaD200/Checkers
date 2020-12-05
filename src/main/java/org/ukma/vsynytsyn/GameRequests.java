@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.ukma.vsynytsyn.dto.GameStatus;
 import org.ukma.vsynytsyn.dto.JoinStatus;
 import org.ukma.vsynytsyn.dto.MoveStatus;
+import org.ukma.vsynytsyn.dto.PlayerColor;
 import sun.plugin.dom.exception.InvalidStateException;
 
 import java.io.*;
@@ -14,7 +15,7 @@ import java.net.URL;
 public class GameRequests {
 
     @Getter
-    private String color;
+    private PlayerColor color;
     @Getter
     private String token;
 
@@ -99,7 +100,7 @@ public class GameRequests {
         int status = con.getResponseCode();
         if (status > 299) {
             String errorResponse = getResponse(con.getErrorStream());
-            System.err.println(color.toUpperCase() + ": " + errorResponse);
+            System.err.println(color.name().toUpperCase() + ": " + errorResponse);
 
         } else {
             String jsonResponse = getResponse(con.getInputStream());

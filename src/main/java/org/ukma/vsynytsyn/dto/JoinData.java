@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class JoinData {
-    private String color;
+    private PlayerColor color;
     private String token;
 }
