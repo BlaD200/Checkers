@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JoinStatus {
-    private String status;
-    private JoinData data;
+class JoinData {
+    private String color;
+    private String token;
 }
