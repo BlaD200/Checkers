@@ -8,9 +8,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cell {
-    private String color;
+    private PlayerColor color;
     private int row;
     private int column;
     private boolean king;
     private int position;
+
+    public boolean red() {
+        return color == PlayerColor.RED;
+    }
 }
