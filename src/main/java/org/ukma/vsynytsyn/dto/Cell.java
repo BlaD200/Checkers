@@ -7,7 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JoinStatus {
-    private String status;
-    private JoinData data;
+public class Cell {
+    private String color;
+    private int row;
+    private int column;
+    private boolean king;
+    private int position;
 }
