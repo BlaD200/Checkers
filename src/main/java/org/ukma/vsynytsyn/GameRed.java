@@ -6,41 +6,43 @@ import org.ukma.vsynytsyn.dto.PlayerColor;
 
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.concurrent.Semaphore;
 
 public class GameRed implements Runnable {
-    public final Object lock;
+
     private final GameRequests red = new GameRequests();
+    private final Scanner scanner;
+    public final Semaphore lock;
 
 
-    public GameRed(Object lock) {
+    public GameRed(Scanner scanner, Semaphore lock) {
+        this.scanner = scanner;
         this.lock = lock;
     }
 
 
     @SneakyThrows
     public void run() {
-        GameRed gameRed = new GameRed(lock);
-        gameRed.initRedPlayer();
+        initRedPlayer();
 
-        synchronized (lock) {
-            Scanner scanner = new Scanner(System.in);
-            System.out.print("RED move: ");
-            while (scanner.hasNext()) {
-                String move = scanner.nextLine(); // p1,p2
-                gameRed.move(move);
+        lock.acquire();
+        System.out.print("RED move: ");
+        while (scanner.hasNextLine()) {
+            String move = scanner.nextLine(); // p1,p2
+            move(move);
 
-                GameStatus gameStatus = red.gameStatus();
-                System.out.println("RED data; " + gameStatus);
-                if (gameStatus.getData().getWhoseTurn() == PlayerColor.RED)
-                    continue;
-
-                lock.notifyAll();
-                try {
-                    lock.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            GameStatus gameStatus = red.gameStatus();
+            System.out.println("RED data; " + gameStatus);
+            if (gameStatus.getData().getWhoseTurn() == PlayerColor.RED)
+                continue;
+            else if (gameStatus.getData().isFinished()) {
+                System.out.println(gameStatus.getData().getWinner());
+                break;
             }
+
+            lock.release();
+            Thread.sleep(100);
+            lock.acquire();
             System.out.print("RED move: ");
         }
     }

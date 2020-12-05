@@ -1,14 +1,16 @@
 package org.ukma.vsynytsyn;
 
+import java.util.Scanner;
+import java.util.concurrent.Semaphore;
+
 public class Game {
 
-    public final Object lock = new Object();
-
     public static void main(String[] args) throws InterruptedException {
-        Object lock = new Object();
+        Semaphore semaphore = new Semaphore(1);
 
-        GameRed gameRed = new GameRed(lock);
-        GameBlack gameBlack = new GameBlack(lock);
+        Scanner scanner = new Scanner(System.in);
+        GameRed gameRed = new GameRed(scanner, semaphore);
+        GameBlack gameBlack = new GameBlack(scanner, semaphore);
 
         Thread red = new Thread(gameRed);
         Thread black = new Thread(gameBlack);
