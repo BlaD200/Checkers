@@ -51,15 +51,13 @@ public class GameRequests {
         URL url = new URL(String.format("http://localhost:8081/game?team_name=%s", teamName));
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
-        con.setConnectTimeout(5000);
-        con.setReadTimeout(5000);
 
         JoinStatus joinStatus = null;
 
         int status = con.getResponseCode();
         if (status > 299) {
             String errorResponse = getResponse(con.getErrorStream());
-            System.err.println(errorResponse);
+            System.err.println(teamName.toUpperCase() + ": " + errorResponse);
 
         } else {
             String jsonResponse = getResponse(con.getInputStream());
@@ -87,6 +85,7 @@ public class GameRequests {
 
         con.setRequestProperty("Content-Type", "application/json; utf-8");
         con.setRequestProperty("Accept", "application/json");
+        con.setRequestProperty(authHeaderName, token);
         con.setDoOutput(true);
         DataOutputStream out = new DataOutputStream(con.getOutputStream());
         out.writeBytes(requestJson);
@@ -100,7 +99,7 @@ public class GameRequests {
         int status = con.getResponseCode();
         if (status > 299) {
             String errorResponse = getResponse(con.getErrorStream());
-            System.err.println(errorResponse);
+            System.err.println(color.toUpperCase() + ": " + errorResponse);
 
         } else {
             String jsonResponse = getResponse(con.getInputStream());

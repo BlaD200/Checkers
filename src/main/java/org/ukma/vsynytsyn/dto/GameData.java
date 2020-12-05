@@ -28,4 +28,18 @@ public class GameData {
 
     @JsonProperty(value = "is_finished")
     private boolean isFinished;
+
+
+    @Override
+    public String toString() {
+        return "GameData{" +
+                "status='" + status + '\'' +
+                ", whoseTurn='" + whoseTurn + '\'' +
+                ", winner='" + winner + '\'' +
+                ", board=" + "..." +
+                ", availableTime=" + availableTime +
+                ", isStarted=" + isStarted +
+                ", isFinished=" + isFinished +
+                '}';
+    }
 }

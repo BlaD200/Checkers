@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-class JoinData {
+public class JoinData {
     private String color;
     private String token;
 }
