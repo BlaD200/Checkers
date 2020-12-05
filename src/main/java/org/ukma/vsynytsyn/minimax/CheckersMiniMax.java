@@ -1,9 +1,11 @@
 package org.ukma.vsynytsyn.minimax;
 
 import org.ukma.vsynytsyn.dto.Cell;
+import org.ukma.vsynytsyn.dto.PlayerColor;
 import org.ukma.vsynytsyn.minimax.MiniMax;
 import org.ukma.vsynytsyn.utils.Tuple;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -40,32 +42,17 @@ public class CheckersMiniMax extends MiniMax<Tuple<List<Cell>, String>> {
 
             if (cell.red() && red) {
                 if (cell.isKing()) {
-
+                    // TODO king's movement
                 } else {
-                    if (row > 1 && col > 1) {
-                        int topLeft = getTopLeft(pos, rowEven);
-                        int topTopLeft = getTopLeft(topLeft, !rowEven);
-                        if (isBlack(topLeft, board) && isEmpty(topTopLeft, board)) {
-                            capture = true;
-                            // move
-                        }
-                    }
-
-                    if (row > 1 && col < 6) {
-                        int bottomLeft = getBottomLeft(pos, rowEven);
-                        int bottomBottomLeft = getBottomLeft(bottomLeft, !rowEven);
-                        if (isBlack(bottomLeft, board) && isEmpty(bottomBottomLeft, board)) {
-                            capture = true;
-                            // move
-                        }
-                    }
-
                     if (row < 6 && col > 1) {
                         int topRight = getTopRight(pos, rowEven);
                         int topTopRight = getTopRight(topRight, !rowEven);
                         if (isBlack(topRight, board) && isEmpty(topTopRight, board)) {
-                            capture = true;
-                            // move
+                            if (!capture) {
+                                children.clear();
+                                capture = true;
+                            }
+                            capture(position, pos, topRight, topTopRight, true);
                         }
                     }
 
@@ -73,52 +60,38 @@ public class CheckersMiniMax extends MiniMax<Tuple<List<Cell>, String>> {
                         int bottomRight = getBottomRight(pos, rowEven);
                         int bottomBottomRight = getBottomRight(bottomRight, !rowEven);
                         if (isBlack(bottomRight, board) && isEmpty(bottomBottomRight, board)) {
-                            capture = true;
-                            // move
+                            if (!capture) {
+                                children.clear();
+                                capture = true;
+                            }
+                            capture(position, pos, bottomRight, bottomBottomRight, true);
                         }
                     }
 
                     if (!capture) {
                         if (col != 0) {
                             int topRight = getTopRight(pos, rowEven);
-                            if (isEmpty(topRight, board)) {
-                                // move
-                            }
+                            if (isEmpty(topRight, board))
+                                children.add(move(position, pos, topRight, true));
                         }
 
                         if (col != 7) {
                             int bottomRight = getBottomRight(pos, rowEven);
-                            if (isEmpty(bottomRight, board)) {
-                                // move
-                            }
+                            if (isEmpty(bottomRight, board))
+                                children.add(move(position, pos, bottomRight, true));
                         }
                     }
                 }
             } else if (!cell.red() && !red) {
-                if (row < 6 && col > 1) {
-                    int topRight = getTopRight(pos, rowEven);
-                    int topTopRight = getTopRight(topRight, !rowEven);
-                    if (isRed(topRight, board) && isEmpty(topTopRight, board)) {
-                        capture = true;
-                        // move
-                    }
-                }
-
-                if (row < 6 && col < 6) {
-                    int bottomRight = getBottomRight(pos, rowEven);
-                    int bottomBottomRight = getBottomRight(bottomRight, !rowEven);
-                    if (isRed(bottomRight, board) && isEmpty(bottomBottomRight, board)) {
-                        capture = true;
-                        // move
-                    }
-                }
-
                 if (row > 1 && col > 1) {
                     int topLeft = getTopLeft(pos, rowEven);
                     int topTopLeft = getTopLeft(topLeft, !rowEven);
                     if (isRed(topLeft, board) && isEmpty(topTopLeft, board)) {
-                        capture = true;
-                        // move
+                        if (!capture) {
+                            children.clear();
+                            capture = true;
+                        }
+                        capture(position, pos, topLeft, topTopLeft, false);
                     }
                 }
 
@@ -126,36 +99,31 @@ public class CheckersMiniMax extends MiniMax<Tuple<List<Cell>, String>> {
                     int bottomLeft = getBottomLeft(pos, rowEven);
                     int bottomBottomLeft = getBottomLeft(bottomLeft, !rowEven);
                     if (isRed(bottomLeft, board) && isEmpty(bottomBottomLeft, board)) {
-                        capture = true;
-                        // move
+                        if (!capture) {
+                            children.clear();
+                            capture = true;
+                        }
+                        capture(position, pos, bottomLeft, bottomBottomLeft, false);
                     }
                 }
 
                 if (!capture) {
                     if (col != 0) {
                         int topLeft = getTopLeft(pos, rowEven);
-                        if (isEmpty(topLeft, board)) {
-                            // move
-                        }
+                        if (isEmpty(topLeft, board))
+                            children.add(move(position, pos, topLeft, false));
                     }
 
                     if (col != 7) {
                         int bottomLeft = getBottomLeft(pos, rowEven);
-                        if (isEmpty(bottomLeft, board)) {
-                            children.add(move(position, pos, bottomLeft));
-                        }
+                        if (isEmpty(bottomLeft, board))
+                            children.add(move(position, pos, bottomLeft, false));
                     }
                 }
             }
         }
 
         return children;
-    }
-
-    private Tuple<List<Cell>, String> move(Tuple<List<Cell>, String> position, int pos, int bottomLeft) {
-        List<Cell> previousPosition = new LinkedList<>(position.getA());
-
-        return null;
     }
 
     @Override
@@ -172,6 +140,44 @@ public class CheckersMiniMax extends MiniMax<Tuple<List<Cell>, String>> {
         score += red ? 1 : -1;
 
         return score;
+    }
+
+    private Tuple<List<Cell>, String> capture(Tuple<List<Cell>, String> position,
+                                           int prev, int captured, int next, boolean red) {
+        Tuple<List<Cell>, String> move = move(position, prev, next, red);
+
+        List<Cell> newPosition = move.getA();
+        int i = 0;
+        for (Cell cell : newPosition) {
+            if (cell.getPosition() == captured) {
+                newPosition.remove(i);
+                break;
+            }
+            ++i;
+        }
+
+        return move;
+    }
+
+    private Tuple<List<Cell>, String> move(Tuple<List<Cell>, String> position,
+                                           int prev, int next, boolean red) {
+        int newRow = next / 4 - 1;
+        int newCol = next % 4 - 1;
+        Cell newCell = new Cell(red ? PlayerColor.RED : PlayerColor.BLACK,
+                newRow, newCol, newRow == 0 || newRow == 7, next);
+
+        List<Cell> newPosition = new LinkedList<>(position.getA());
+        int i = 0;
+        for (Cell cell : position.getA()) {
+            if (cell.getPosition() == prev) {
+                newPosition.remove(i);
+                newPosition.add(i, newCell);
+                break;
+            }
+            ++i;
+        }
+
+        return new Tuple<>(newPosition, "[" + prev + "," + next + "]");
     }
 
     private int getTopLeft(int position, boolean rowEven) {
