@@ -14,7 +14,7 @@ public class GameData {
     private String status;
 
     @JsonProperty(value = "whose_turn")
-    private String whoseTurn;
+    private PlayerColor whoseTurn;
 
     private String winner;
 
