@@ -19,13 +19,17 @@ public class MiniMax {
 
     public Tuple<Tuple<List<Cell>, String>, Double> miniMax(Tuple<List<Cell>, String> board, int depth,
                                                             boolean maximizingPlayer, double alpha, double beta) {
-        if (depth == 0 /*|| gameOver(board.getFirst())*/) {
+        if (depth == 0) {
             return new Tuple<>(board, evaluateBoard(board.getFirst(), maximizingPlayer));
         }
 
         double eval = maximizingPlayer ? -100 : 100;
 
         List<Tuple<List<Cell>, String>> possibleBoardStates = getPossibleBoardStates(board.getFirst(), maximizingPlayer);
+        if (possibleBoardStates.size() == 0)
+            if (gameOver(board.getFirst()))
+                return new Tuple<>(board, (maximizingPlayer ? 100. : -100.));
+
         Tuple<List<Cell>, String> nextBoard = possibleBoardStates.get(0);
 
         for (Tuple<List<Cell>, String> state : possibleBoardStates) {
@@ -52,6 +56,20 @@ public class MiniMax {
         }
 
         return new Tuple<>(nextBoard, eval);
+    }
+
+
+    private boolean gameOver(List<Cell> board) {
+        boolean hasRed = false;
+        boolean hasBlack = false;
+        for (Cell cell : board) {
+            if (cell.isRed())
+                hasRed = true;
+            else
+                hasBlack = true;
+        }
+
+        return (hasRed && !hasBlack) || (!hasRed && hasBlack);
     }
 
 
