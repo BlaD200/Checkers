@@ -78,30 +78,39 @@ public class MiniMax {
         List<Tuple<List<Cell>, String>> possibleBoardStates = new LinkedList<>();
         AtomicBoolean capture = new AtomicBoolean(false);
 
-        Boolean[] auxBoard = new Boolean[33]; // True - RED, False - Black, Null - Empty
-        for (Cell cell : boardState)
-            auxBoard[cell.getPosition()] = cell.isRed();
-
         for (Cell cell : boardState) {
-            if (cell.isRed() && red) {
-                if (cell.isKing())
-                    findMovesLeft(boardState, possibleBoardStates, auxBoard, capture, cell, true);
-                findMovesRight(boardState, possibleBoardStates, auxBoard, capture, cell, true);
-            } else if (!cell.isRed() && !red) {
-                if (cell.isKing())
-                    findMovesRight(boardState, possibleBoardStates, auxBoard, capture, cell, false);
-                findMovesLeft(boardState, possibleBoardStates, auxBoard, capture, cell, false);
-            }
+            if (cell.isRed() && red)
+                findMove(boardState, possibleBoardStates, capture, cell, true, "");
+            else if (!cell.isRed() && !red)
+                findMove(boardState, possibleBoardStates, capture, cell, false, "");
         }
 
         return possibleBoardStates;
     }
 
 
+    private void findMove(List<Cell> boardState, List<Tuple<List<Cell>, String>> possibleBoardStates,
+                          final AtomicBoolean capture, Cell cell, boolean isRed, String currentMoves) {
+        Boolean[] auxBoard = new Boolean[33]; // True - RED, False - Black, Null - Empty
+        for (Cell c : boardState)
+            auxBoard[c.getPosition()] = c.isRed();
+
+        if (cell.isKing())
+            if (isRed)
+                findMovesLeft(boardState, possibleBoardStates, auxBoard, capture, cell, true, currentMoves);
+            else
+                findMovesRight(boardState, possibleBoardStates, auxBoard, capture, cell, false, currentMoves);
+        if (isRed)
+            findMovesRight(boardState, possibleBoardStates, auxBoard, capture, cell, true, currentMoves);
+        else
+            findMovesLeft(boardState, possibleBoardStates, auxBoard, capture, cell, false, currentMoves);
+    }
+
+
     private void findMovesRight(
             List<Cell> boardState, List<Tuple<List<Cell>, String>> possibleBoardStates, Boolean[] auxBoard,
             final AtomicBoolean capture, Cell cell,
-            boolean isRed
+            boolean isRed, String currentMove
     ) {
         int row = cell.getRow();
         int col = cell.getColumn();
@@ -113,14 +122,14 @@ public class MiniMax {
 
         if (row < MAX_ROW - 1 && col > MIN_COL) {
             int topTopRight = getTopRightPosition(topRight, !rowEven);
-            capture.set(maybeCapture(boardState, possibleBoardStates, auxBoard,
-                    capture.get(), pos, topRight, topTopRight, isRed));
+            maybeCapture(boardState, possibleBoardStates, auxBoard,
+                    capture, pos, topRight, topTopRight, isRed, currentMove, cell.isKing());
         }
 
         if (row < MAX_ROW - 1 && col < MAX_COL) {
             int bottomBottomRight = getBottomRightPosition(bottomRight, !rowEven);
-            capture.set(maybeCapture(boardState, possibleBoardStates, auxBoard,
-                    capture.get(), pos, bottomRight, bottomBottomRight, isRed));
+            maybeCapture(boardState, possibleBoardStates, auxBoard,
+                    capture, pos, bottomRight, bottomBottomRight, isRed, currentMove, cell.isKing());
         }
 
         if (!capture.get() && row != MAX_ROW)
@@ -132,7 +141,7 @@ public class MiniMax {
     private void findMovesLeft(
             List<Cell> boardState, List<Tuple<List<Cell>, String>> possibleBoardStates, Boolean[] auxBoard,
             AtomicBoolean capture, Cell cell,
-            boolean isRed
+            boolean isRed, String currentMove
     ) {
         int row = cell.getRow();
         int col = cell.getColumn();
@@ -144,14 +153,14 @@ public class MiniMax {
 
         if (row > MIN_ROW + 1 && col > MIN_COL) {
             int topTopLeft = getTopLeftPosition(topLeft, !rowEven);
-            capture.set(maybeCapture(boardState, possibleBoardStates, auxBoard,
-                    capture.get(), pos, topLeft, topTopLeft, isRed));
+            maybeCapture(boardState, possibleBoardStates, auxBoard,
+                    capture, pos, topLeft, topTopLeft, isRed, currentMove, cell.isKing());
         }
 
         if (row > MIN_ROW + 1 && col < MAX_COL) {
             int bottomBottomLeft = getBottomLeftPosition(bottomLeft, !rowEven);
-            capture.set(maybeCapture(boardState, possibleBoardStates, auxBoard,
-                    capture.get(), pos, bottomLeft, bottomBottomLeft, isRed));
+            maybeCapture(boardState, possibleBoardStates, auxBoard,
+                    capture, pos, bottomLeft, bottomBottomLeft, isRed, currentMove, cell.isKing());
         }
 
         if (!capture.get() && row != MIN_ROW)
@@ -171,17 +180,22 @@ public class MiniMax {
     }
 
 
-    private boolean maybeCapture(List<Cell> board, List<Tuple<List<Cell>, String>> children, Boolean[] auxBoard,
-                                 boolean capture, int pos, int captured, int newPos, boolean red) {
-        boolean cond = red ? isBlack(captured, auxBoard) : isRed(captured, auxBoard);
+    private void maybeCapture(List<Cell> board, List<Tuple<List<Cell>, String>> children, Boolean[] auxBoard,
+                              AtomicBoolean capture, int pos, int captured, int newPos,
+                              boolean isRed, String currentMove, boolean isKing) {
+        boolean cond = isRed ? isBlack(captured, auxBoard) : isRed(captured, auxBoard);
         if (cond && isEmpty(newPos, auxBoard)) {
-            if (!capture) {
+            if (!capture.get()) {
                 children.clear();
-                capture = true;
+                capture.set(true);
             }
-            children.add(capture(board, pos, captured, newPos, red));
+            Tuple<List<Cell>, String> captureMove = capture(board, pos, captured, newPos, isRed);
+            captureMove.setSecond(currentMove + " " + captureMove.getSecond());
+            children.add(captureMove);
+
+            Cell newCell = getNewCell(newPos, isKing, isRed);
+            findMove(captureMove.getFirst(), children, capture, newCell, isRed, captureMove.getSecond());
         }
-        return capture;
     }
 
 
@@ -219,17 +233,13 @@ public class MiniMax {
 
 
     private Tuple<List<Cell>, String> move(List<Cell> board,
-                                           int prevPos, int nextPos, boolean red) {
-        int newRow = (nextPos - 1) / (MAX_COL + 1);
-        int newCol = (nextPos - 1) % (MAX_COL + 1);
-        Cell newCell = new Cell(red ? PlayerColor.RED : PlayerColor.BLACK,
-                newRow, newCol, newRow == 0 || newRow == 7, nextPos);
-
+                                           int prevPos, int nextPos, boolean isRed) {
         List<Cell> newBoard = new LinkedList<>(board);
         int i = 0;
         for (Cell cell : board) {
             if (cell.getPosition() == prevPos) {
-                newBoard.remove(i);
+                Cell removed = newBoard.remove(i);
+                Cell newCell = getNewCell(nextPos, removed.isKing(), isRed);
                 newBoard.add(i, newCell);
                 break;
             }
@@ -237,6 +247,14 @@ public class MiniMax {
         }
 
         return new Tuple<>(newBoard, prevPos + "," + nextPos);
+    }
+
+
+    private Cell getNewCell(int newPos, boolean isKing, boolean isRed) {
+        int newRow = (newPos - 1) / (MAX_COL + 1);
+        int newCol = (newPos - 1) % (MAX_COL + 1);
+        return new Cell(isRed ? PlayerColor.RED : PlayerColor.BLACK,
+                newRow, newCol, isKing || newRow == 0 || newRow == 7, newPos);
     }
 
 

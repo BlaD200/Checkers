@@ -1,9 +1,13 @@
 package org.ukma.vsynytsyn.utils;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Tuple<A, B> {
-    private final A first;
-    private final B second;
+    private A first;
+    private B second;
 }
