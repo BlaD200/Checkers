@@ -30,9 +30,11 @@ public class GameMiniMax {
 
 
     public GameMiniMax(String teamName) {
-        this.miniMax = new MiniMax();
-        gameRequests = new GameRequests();
+        this.gameRequests = new GameRequests();
         this.teamName = teamName;
+        this.miniMax = new MiniMax();
+        miniMax.time = 300 * 1000;
+        miniMax.resetTime();
     }
 
 
@@ -42,6 +44,7 @@ public class GameMiniMax {
         int connectionAttempts = MAX_CONNECTION_ATTEMPTS;
 
         while (true) {
+            long startStart = System.currentTimeMillis();
             try {
                 GameStatus gameStatus = gameRequests.gameStatus();
                 if (gameStatus.getData().getWinner() != null) { // game is end
@@ -76,15 +79,24 @@ public class GameMiniMax {
             );
 
             String moveVal = move.getFirst().getSecond();
-//            System.out.printf("%s move: %s\n", playerColor, moveVal);
-            move(moveVal);
+            String[] moves = moveVal.trim().split(" ");
+            for (String s : moves) {
+//                System.out.printf("%s move: %s\n", playerColor, moveVal);
+                move(s);
+                long end = System.currentTimeMillis();
+                long timeForStep = end - start;
+                System.out.printf("%s time for move(%d): %dms", playerColor, stepCount, timeForStep);
+                stepMillis += timeForStep;
+                ++stepCount;
+                stepMillisMax = Math.max(stepMillisMax, timeForStep);
+            }
 
-            long end = System.currentTimeMillis();
-            long timeForStep = end - start;
-            System.out.printf("%s time for move(%d): %sms\n", playerColor, stepCount, timeForStep);
-            stepMillis += timeForStep;
-            ++stepCount;
-            stepMillisMax = Math.max(stepMillisMax, timeForStep);
+            long endEnd = System.currentTimeMillis();
+            long timeForStep = endEnd - startStart;
+            System.out.printf("| %dms\n", timeForStep);
+//            stepMillis += timeForStep;
+//            ++stepCount;
+//            stepMillisMax = Math.max(stepMillisMax, timeForStep);
         }
 
         long l = stepMillis / stepCount;
@@ -104,7 +116,7 @@ public class GameMiniMax {
                 JoinStatus joinStatus = gameRequests.joinGame(teamName);
                 if (joinStatus == null || !joinStatus.getStatus().equals("success")) {
                     --connectionAttempts;
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                     continue;
                 }
                 playerColor = joinStatus.getData().getColor();
