@@ -30,8 +30,7 @@ public class GameMiniMax {
     private long stepMillisMax;
 
 
-    public GameMiniMax(/*Semaphore lock*/String teamName) {
-        //        this.lock = lock;
+    public GameMiniMax(String teamName) {
         this.miniMax = new MiniMax();
         gameRequests = new GameRequests();
         this.teamName = teamName;
