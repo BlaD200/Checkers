@@ -12,16 +12,16 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
-public class GameBlackMiniMax implements Runnable {
+public class GameRedMiniMax implements Runnable {
 
-    private final GameRequests black = new GameRequests();
-    private final Semaphore lock;
+    private final GameRequests red = new GameRequests();
+    public final Semaphore lock;
     private final MiniMax miniMax;
 
-    private boolean blackPlayer;
+    private boolean redPlayer;
 
 
-    public GameBlackMiniMax(Semaphore lock) {
+    public GameRedMiniMax(Semaphore lock) {
         this.lock = lock;
         this.miniMax = new MiniMax();
     }
@@ -29,43 +29,43 @@ public class GameBlackMiniMax implements Runnable {
 
     @SneakyThrows
     public void run() {
-        initBlackPlayer();
+        initRedPlayer();
 
         lock.acquire();
-        System.out.print("BLACK move: ");
+        System.out.print("RED move: ");
         while (true) {
-            List<Cell> board = black.gameStatus().getData().getBoard();
+            List<Cell> board = red.gameStatus().getData().getBoard();
             Tuple<Tuple<List<Cell>, String>, Double> move = miniMax.miniMax(new Tuple<>(board, ""),
-                    9, false,
-                    -100, 100);
+                    9, redPlayer,
+                    Double.MIN_VALUE, Double.MAX_VALUE);
             String moveVal = move.getFirst().getSecond();
             System.out.println(moveVal);
             move(moveVal);
 
-            GameStatus gameStatus = black.gameStatus();
-            System.out.println("BLACK data; " + gameStatus);
-            if (gameStatus.getData().getWhoseTurn() == PlayerColor.BLACK)
+            GameStatus gameStatus = red.gameStatus();
+            System.out.println("RED data; " + gameStatus);
+            if (gameStatus.getData().getWhoseTurn() == PlayerColor.RED)
                 continue;
-            else if (gameStatus.getData().isFinished())
+            else if (gameStatus.getData().isFinished()) {
+                System.out.println(gameStatus.getData().getWinner());
                 break;
+            }
 
             lock.release();
             Thread.sleep(100);
             lock.acquire();
-            System.out.print("BLACK move: ");
+            System.out.print("RED move: ");
         }
     }
 
 
-    private void initBlackPlayer() {
+    private void initRedPlayer() {
         try {
-            Thread.sleep(250);
-            JoinStatus joinStatus = black.joinGame("Team2");
-            System.out.println("BLACK joins; " + joinStatus);
-            System.out.println("BLACK data; " + black.gameStatus());
-            blackPlayer = joinStatus.getData().getColor() == PlayerColor.BLACK;
-            Thread.sleep(250);
-        } catch (IOException | InterruptedException e) {
+            JoinStatus joinStatus = red.joinGame("Team1");
+            System.out.println("RED joins; " + joinStatus);
+            System.out.println("RED data; " + red.gameStatus());
+            redPlayer = joinStatus.getData().getColor() == PlayerColor.RED;
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -75,7 +75,7 @@ public class GameBlackMiniMax implements Runnable {
         int from = Integer.parseInt(move.split(",")[0]);
         int to = Integer.parseInt(move.split(",")[1]);
         try {
-            black.move(from, to);
+            red.move(from, to);
         } catch (IOException e) {
             e.printStackTrace();
         }

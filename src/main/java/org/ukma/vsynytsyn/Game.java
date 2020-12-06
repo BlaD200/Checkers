@@ -9,11 +9,17 @@ public class Game {
         Semaphore semaphore = new Semaphore(1);
 
         Scanner scanner = new Scanner(System.in);
-        GameRed gameRed = new GameRed(scanner, semaphore);
-        GameBlackMiniMax gameBlack = new GameBlackMiniMax(semaphore);
+        GameRedMiniMax gameRedMiniMax = new GameRedMiniMax(semaphore);
+        GameBlackMiniMax gameBlackMiniMax = new GameBlackMiniMax(semaphore);
 
-        Thread red = new Thread(gameRed);
-        Thread black = new Thread(gameBlack);
+//        GameRed gameRed = new GameRed(scanner, semaphore);
+//        GameBlack gameBlack = new GameBlack(scanner, semaphore);
+
+        Thread red = new Thread(gameRedMiniMax);
+        Thread black = new Thread(gameBlackMiniMax);
+
+//        Thread red = new Thread(gameRed);
+//        Thread black = new Thread(gameBlack);
 
         red.start();
         black.start();
