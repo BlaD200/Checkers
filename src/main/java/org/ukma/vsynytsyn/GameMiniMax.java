@@ -22,7 +22,7 @@ public class GameMiniMax {
     private final MiniMax miniMax;
     GameStatus gameStatus;
     private PlayerColor playerColor;
-    private List<Cell> boardRaw;
+    private List<Cell> board;
     private boolean redPlayer;
 
     private long stepMillis;
@@ -49,7 +49,7 @@ public class GameMiniMax {
                     System.out.printf("Game finished. Winner: %s\n", gameStatus.getData().getWinner());
                     break;
                 } else if (gameStatus.getData().getWhoseTurn() == playerColor) { // our turn
-                    boardRaw = gameStatus.getData().getBoard();
+                    board = gameStatus.getData().getBoard();
                     connectionAttempts = MAX_CONNECTION_ATTEMPTS;
                 } else {
                     Thread.sleep(10);
@@ -70,11 +70,10 @@ public class GameMiniMax {
 
             long start = System.currentTimeMillis();
 
-            Cell[] board = MiniMax.preprocessBoard(boardRaw);
-            Tuple<Tuple<Cell[], String>, Double> move = miniMax.miniMax(
+            Tuple<Tuple<List<Cell>, String>, Double> move = miniMax.miniMax(
                     new Tuple<>(board, ""),
                     MINIMAX_DEPTH, redPlayer,
-                    Double.MIN_VALUE, Double.MAX_VALUE
+                    -100, 100
             );
 
             String moveVal = move.getFirst().getSecond();
