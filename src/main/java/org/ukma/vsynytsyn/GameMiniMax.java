@@ -18,10 +18,9 @@ public class GameMiniMax {
 
     private final GameRequests gameRequests;
     private final String teamName;
-    //    public final Semaphore lock;
-    private final MiniMax miniMax;
-    GameStatus gameStatus;
     private PlayerColor playerColor;
+
+    private final MiniMax miniMax;
     private List<Cell> board;
     private boolean redPlayer;
 
@@ -44,7 +43,7 @@ public class GameMiniMax {
 
         while (true) {
             try {
-                gameStatus = gameRequests.gameStatus();
+                GameStatus gameStatus = gameRequests.gameStatus();
                 if (gameStatus.getData().getWinner() != null) { // game is end
                     System.out.printf("Game finished. Winner: %s\n", gameStatus.getData().getWinner());
                     break;
