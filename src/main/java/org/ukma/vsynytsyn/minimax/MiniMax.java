@@ -9,10 +9,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
-// like typedef
-abstract class BoardState implements List<Cell> {
-}
-
 public class MiniMax {
 
     public static final int MIN_ROW = 0;
@@ -27,26 +23,26 @@ public class MiniMax {
             return new Tuple<>(board, evaluateBoard(board.getFirst(), maximizingPlayer));
         }
 
-        double eval = maximizingPlayer ? Double.MIN_VALUE : Double.MAX_VALUE;
+        double eval = maximizingPlayer ? -100 : 100;
 
-        List<Tuple<List<Cell>, String>> children = getPossibleBoardStates(board.getFirst(), maximizingPlayer);
-        Tuple<List<Cell>, String> nextBoard = children.get(0);
+        List<Tuple<List<Cell>, String>> possibleBoardStates = getPossibleBoardStates(board.getFirst(), maximizingPlayer);
+        Tuple<List<Cell>, String> nextBoard = possibleBoardStates.get(0);
 
-        for (Tuple<List<Cell>, String> child : children) {
+        for (Tuple<List<Cell>, String> state : possibleBoardStates) {
             Tuple<Tuple<List<Cell>, String>, Double> boardEval =
-                    miniMax(child, depth - 1, !maximizingPlayer, alpha, beta);
+                    miniMax(state, depth - 1, !maximizingPlayer, alpha, beta);
             double newEval = boardEval.getSecond();
 
             if (maximizingPlayer) {
                 if (newEval > eval) {
                     eval = newEval;
-                    nextBoard = child;
+                    nextBoard = state;
                     alpha = newEval;
                 }
             } else {
                 if (newEval < eval) {
                     eval = newEval;
-                    nextBoard = child;
+                    nextBoard = state;
                     beta = newEval;
                 }
             }
@@ -57,20 +53,6 @@ public class MiniMax {
 
         return new Tuple<>(nextBoard, eval);
     }
-
-    // TODO remove?
-    //    private boolean gameOver(List<Cell> board) {
-    //        boolean hasRed = false;
-    //        boolean hasBlack = false;
-    //        for (Cell cell : board) {
-    //            if (cell.isRed())
-    //                hasRed = true;
-    //            else
-    //                hasBlack = true;
-    //        }
-    //
-    //        return !hasRed && !hasBlack;
-    //    }
 
 
     private List<Tuple<List<Cell>, String>> getPossibleBoardStates(List<Cell> boardState, boolean red) {
@@ -83,14 +65,12 @@ public class MiniMax {
 
         for (Cell cell : boardState) {
             if (cell.isRed() && red) {
-                if (cell.isKing()) {
+                if (cell.isKing())
                     findMovesLeft(boardState, possibleBoardStates, auxBoard, capture, cell, true);
-                }
                 findMovesRight(boardState, possibleBoardStates, auxBoard, capture, cell, true);
             } else if (!cell.isRed() && !red) {
-                if (cell.isKing()) {
+                if (cell.isKing())
                     findMovesRight(boardState, possibleBoardStates, auxBoard, capture, cell, false);
-                }
                 findMovesLeft(boardState, possibleBoardStates, auxBoard, capture, cell, false);
             }
         }
@@ -124,17 +104,8 @@ public class MiniMax {
                     capture.get(), pos, bottomRight, bottomBottomRight, isRed));
         }
 
-        if (!capture.get()) {
-            if (col != MIN_COL && rowEven) {
-                if (isEmpty(topRight, auxBoard))
-                    possibleBoardStates.add(move(boardState, pos, topRight, isRed));
-            }
-
-            if (col != MAX_COL && !rowEven) {
-                if (isEmpty(bottomRight, auxBoard))
-                    possibleBoardStates.add(move(boardState, pos, bottomRight, isRed));
-            }
-        }
+        maybeMove(boardState, possibleBoardStates,
+                auxBoard, capture, isRed, row, col, pos, rowEven, topRight, bottomRight);
     }
 
 
@@ -163,23 +134,27 @@ public class MiniMax {
                     capture.get(), pos, bottomLeft, bottomBottomLeft, isRed));
         }
 
-        if (!capture.get()) {
-            if (col != MIN_COL && !rowEven) {
-                if (isEmpty(topLeft, auxBoard))
-                    possibleBoardStates.add(move(boardState, pos, topLeft, isRed));
-            }
+        maybeMove(boardState, possibleBoardStates,
+                auxBoard, capture, isRed, row, col, pos, rowEven, topLeft, bottomLeft);
+    }
 
-            if (col != MAX_COL && rowEven) {
-                if (isEmpty(bottomLeft, auxBoard))
-                    possibleBoardStates.add(move(boardState, pos, bottomLeft, isRed));
-            }
+
+    private void maybeMove(List<Cell> boardState, List<Tuple<List<Cell>, String>> possibleBoardStates,
+                           Boolean[] auxBoard, AtomicBoolean capture, boolean isRed,
+                           int row, int col, int pos, boolean rowEven, int top, int bottom) {
+        if (!capture.get() && row != (isRed ? MAX_ROW : MIN_ROW)) {
+            if ((col != MIN_COL || rowEven) && isEmpty(top, auxBoard))
+                possibleBoardStates.add(move(boardState, pos, top, isRed));
+
+            if ((col != MAX_COL || !rowEven) && isEmpty(bottom, auxBoard))
+                possibleBoardStates.add(move(boardState, pos, bottom, isRed));
         }
     }
 
 
     private boolean maybeCapture(List<Cell> board, List<Tuple<List<Cell>, String>> children, Boolean[] auxBoard,
                                  boolean capture, int pos, int captured, int newPos, boolean red) {
-        boolean cond = red ? isRed(pos, auxBoard) : isBlack(pos, auxBoard);
+        boolean cond = red ? isBlack(captured, auxBoard) : isRed(captured, auxBoard);
         if (cond && isEmpty(newPos, auxBoard)) {
             if (!capture) {
                 children.clear();
@@ -201,8 +176,6 @@ public class MiniMax {
             else
                 score -= cell.isKing() ? 4 : 1;
         }
-
-        score += red ? 1 : -1;
 
         return score;
     }
@@ -229,8 +202,8 @@ public class MiniMax {
     // TODO optimize (HashMap<Position, Cell>?)
     private Tuple<List<Cell>, String> move(List<Cell> board,
                                            int prevPos, int nextPos, boolean red) {
-        int newRow = nextPos / 4 - 1;
-        int newCol = nextPos % 4 - 1;
+        int newRow = (nextPos - 1) / (MAX_COL + 1);
+        int newCol = (nextPos - 1) % (MAX_COL + 1);
         Cell newCell = new Cell(red ? PlayerColor.RED : PlayerColor.BLACK,
                 newRow, newCol, newRow == 0 || newRow == 7, nextPos);
 
@@ -270,12 +243,12 @@ public class MiniMax {
 
 
     private boolean isRed(int position, Boolean[] board) {
-        return board[position];
+        return board[position] == Boolean.TRUE;
     }
 
 
     private boolean isBlack(int position, Boolean[] board) {
-        return !board[position];
+        return board[position] == Boolean.FALSE;
     }
 
 
