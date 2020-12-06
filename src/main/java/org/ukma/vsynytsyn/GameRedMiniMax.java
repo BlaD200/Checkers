@@ -34,8 +34,9 @@ public class GameRedMiniMax implements Runnable {
         lock.acquire();
         System.out.print("RED move: ");
         while (true) {
-            List<Cell> board = red.gameStatus().getData().getBoard();
-            Tuple<Tuple<List<Cell>, String>, Double> move = miniMax.miniMax(new Tuple<>(board, ""),
+            List<Cell> boardRaw = red.gameStatus().getData().getBoard();
+            Cell[] board = MiniMax.preprocessBoard(boardRaw);
+            Tuple<Tuple<Cell[], String>, Double> move = miniMax.miniMax(new Tuple<>(board, ""),
                     9, redPlayer,
                     Double.MIN_VALUE, Double.MAX_VALUE);
             String moveVal = move.getFirst().getSecond();
