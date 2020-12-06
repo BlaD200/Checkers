@@ -4,6 +4,8 @@ import org.ukma.vsynytsyn.dto.Cell;
 import org.ukma.vsynytsyn.dto.PlayerColor;
 import org.ukma.vsynytsyn.utils.Tuple;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,10 +18,13 @@ public class MiniMax {
     public static final int MIN_COL = 0;
     public static final int MAX_COL = 3;
 
+    private Instant start;
+    public long time;
+
 
     public Tuple<Tuple<List<Cell>, String>, Double> miniMax(Tuple<List<Cell>, String> board, int depth,
                                                             boolean maximizingPlayer, double alpha, double beta) {
-        if (depth == 0)
+        if (depth == 0 || isTimeOut())
             return new Tuple<>(board, evaluateBoard(board.getFirst()));
 
         double eval = maximizingPlayer ? -100 : 100;
@@ -34,6 +39,9 @@ public class MiniMax {
         Tuple<List<Cell>, String> nextBoard = possibleBoardStates.get(0);
 
         for (Tuple<List<Cell>, String> state : possibleBoardStates) {
+            if (isTimeOut())
+                break;
+
             Tuple<Tuple<List<Cell>, String>, Double> boardEval =
                     miniMax(state, depth - 1, !maximizingPlayer, alpha, beta);
             double newEval = boardEval.getSecond();
@@ -60,25 +68,13 @@ public class MiniMax {
     }
 
 
-    private boolean gameOver(List<Cell> board) {
-        boolean hasRed = false;
-        boolean hasBlack = false;
-        for (Cell cell : board) {
-            if (cell.isRed())
-                hasRed = true;
-            else
-                hasBlack = true;
-        }
-
-        return (hasRed && !hasBlack) || (!hasRed && hasBlack);
-    }
-
-
     private List<Tuple<List<Cell>, String>> getPossibleBoardStates(List<Cell> boardState, boolean red) {
         List<Tuple<List<Cell>, String>> possibleBoardStates = new LinkedList<>();
         AtomicBoolean capture = new AtomicBoolean(false);
 
         for (Cell cell : boardState) {
+            if (isTimeOut())
+                break;
             if (cell.isRed() && red)
                 findMove(boardState, possibleBoardStates, capture, cell, true, "");
             else if (!cell.isRed() && !red)
@@ -190,27 +186,14 @@ public class MiniMax {
                 capture.set(true);
             }
             Tuple<List<Cell>, String> captureMove = capture(board, pos, captured, newPos, isRed);
-            captureMove.setSecond(currentMove + " " + captureMove.getSecond());
+            if (!currentMove.isEmpty())
+                currentMove += " ";
+            captureMove.setSecond(currentMove + captureMove.getSecond());
             children.add(captureMove);
 
             Cell newCell = getNewCell(newPos, isKing, isRed);
             findMove(captureMove.getFirst(), children, capture, newCell, isRed, captureMove.getSecond());
         }
-    }
-
-
-    // isRed left - black left + 0.5 * (isRed kings - black kings)
-    private double evaluateBoard(List<Cell> board) {
-        double score = 0;
-
-        for (Cell cell : board) {
-            if (cell.isRed())
-                score += cell.isKing() ? 4 : 1;
-            else
-                score -= cell.isKing() ? 4 : 1;
-        }
-
-        return score;
     }
 
 
@@ -290,5 +273,46 @@ public class MiniMax {
 
     private boolean isEmpty(int position, Boolean[] board) {
         return board[position] == null;
+    }
+
+
+    // isRed left - black left + 0.5 * (isRed kings - black kings)
+    private double evaluateBoard(List<Cell> board) {
+        double score = 0;
+
+        for (Cell cell : board) {
+            if (cell.isRed())
+                score += cell.isKing() ? 4 : 1;
+            else
+                score -= cell.isKing() ? 4 : 1;
+        }
+
+        return score;
+    }
+
+
+    private boolean gameOver(List<Cell> board) {
+        boolean hasRed = false;
+        boolean hasBlack = false;
+        for (Cell cell : board) {
+            if (cell.isRed())
+                hasRed = true;
+            else
+                hasBlack = true;
+        }
+
+        return (hasRed && !hasBlack) || (!hasRed && hasBlack);
+    }
+
+
+    private boolean isTimeOut() {
+        Instant finish = Instant.now();
+        long timeElapsed = Duration.between(start, finish).toMillis();
+        return timeElapsed > time;
+    }
+
+
+    public void resetTime() {
+        start = Instant.now();
     }
 }
