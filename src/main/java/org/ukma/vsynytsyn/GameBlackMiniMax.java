@@ -12,13 +12,18 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+import static org.ukma.vsynytsyn.Game.MINIMAX_DEPTH;
+
 public class GameBlackMiniMax implements Runnable {
 
     private final GameRequests black = new GameRequests();
     private final Semaphore lock;
     private final MiniMax miniMax;
 
-    private boolean blackPlayer;
+    private boolean redPlayer;
+
+    private long stepMillis;
+    private long stepCount;
 
 
     public GameBlackMiniMax(Semaphore lock) {
@@ -31,17 +36,24 @@ public class GameBlackMiniMax implements Runnable {
     public void run() {
         initBlackPlayer();
 
-        lock.acquire();
         System.out.print("BLACK move: ");
         while (true) {
+            long start = System.currentTimeMillis();
             List<Cell> boardRaw = black.gameStatus().getData().getBoard();
             Cell[] board = MiniMax.preprocessBoard(boardRaw);
-            Tuple<Tuple<Cell[], String>, Double> move = miniMax.miniMax(new Tuple<>(board, ""),
-                    9, false,
-                    -100, 100);
+            Tuple<Tuple<Cell[], String>, Double> move = miniMax.miniMax(
+                    new Tuple<>(board, ""),
+                    MINIMAX_DEPTH, redPlayer,
+                    Double.MIN_VALUE, Double.MAX_VALUE
+            );
             String moveVal = move.getFirst().getSecond();
             System.out.println(moveVal);
             move(moveVal);
+            long end = System.currentTimeMillis();
+            long timeForStep = end - start;
+            System.out.println("Black time for move: " + timeForStep + "ms");
+            stepMillis += timeForStep;
+            ++stepCount;
 
             GameStatus gameStatus = black.gameStatus();
             System.out.println("BLACK data; " + gameStatus);
@@ -55,6 +67,9 @@ public class GameBlackMiniMax implements Runnable {
             lock.acquire();
             System.out.print("BLACK move: ");
         }
+
+        long l = stepMillis / stepCount;
+        System.out.printf("\nBlack average time for move at depth %d is %d ms%n", MINIMAX_DEPTH, l);
     }
 
 
@@ -64,7 +79,7 @@ public class GameBlackMiniMax implements Runnable {
             JoinStatus joinStatus = black.joinGame("Team2");
             System.out.println("BLACK joins; " + joinStatus);
             System.out.println("BLACK data; " + black.gameStatus());
-            blackPlayer = joinStatus.getData().getColor() == PlayerColor.BLACK;
+            redPlayer = joinStatus.getData().getColor() == PlayerColor.RED;
             Thread.sleep(250);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
