@@ -72,6 +72,7 @@ public class GameMiniMax {
 
             long start = System.currentTimeMillis();
 
+            miniMax.resetTime();
             Tuple<Tuple<List<Cell>, String>, Double> move = miniMax.miniMax(
                     new Tuple<>(board, ""),
                     MINIMAX_DEPTH, redPlayer,
@@ -82,10 +83,15 @@ public class GameMiniMax {
             String[] moves = moveVal.trim().split(" ");
             for (String s : moves) {
 //                System.out.printf("%s move: %s\n", playerColor, moveVal);
+                long beforeMove = System.currentTimeMillis();
                 move(s);
+                long afterMove = System.currentTimeMillis();
+                long moveTime = afterMove - beforeMove;
+
                 long end = System.currentTimeMillis();
                 long timeForStep = end - start;
-                System.out.printf("%s time for move(%d): %dms", playerColor, stepCount, timeForStep);
+                System.out.printf("%s time for move(%d): %dms (a) | %dms (m) ", playerColor, stepCount, timeForStep,
+                        moveTime);
                 stepMillis += timeForStep;
                 ++stepCount;
                 stepMillisMax = Math.max(stepMillisMax, timeForStep);
@@ -93,7 +99,7 @@ public class GameMiniMax {
 
             long endEnd = System.currentTimeMillis();
             long timeForStep = endEnd - startStart;
-            System.out.printf("| %dms\n", timeForStep);
+            System.out.printf("| %dms (f)\n", timeForStep);
 //            stepMillis += timeForStep;
 //            ++stepCount;
 //            stepMillisMax = Math.max(stepMillisMax, timeForStep);
@@ -112,6 +118,10 @@ public class GameMiniMax {
 
         while (connectionAttempts >= 0) {
             try {
+                GameStatus gameStatus = gameRequests.gameStatus();
+                if (gameStatus != null)
+                    miniMax.time = (long) (gameStatus.getData().getAvailableTime() * 1000) - 300;
+
                 System.out.println("Joining the game...");
                 JoinStatus joinStatus = gameRequests.joinGame(teamName);
                 if (joinStatus == null || !joinStatus.getStatus().equals("success")) {
