@@ -19,9 +19,8 @@ public class MiniMax {
 
     public Tuple<Tuple<List<Cell>, String>, Double> miniMax(Tuple<List<Cell>, String> board, int depth,
                                                             boolean maximizingPlayer, double alpha, double beta) {
-        if (depth == 0) {
+        if (depth == 0)
             return new Tuple<>(board, evaluateBoard(board.getFirst(), maximizingPlayer));
-        }
 
         double eval = maximizingPlayer ? -100 : 100;
 
@@ -29,6 +28,8 @@ public class MiniMax {
         if (possibleBoardStates.size() == 0)
             if (gameOver(board.getFirst()))
                 return new Tuple<>(board, (maximizingPlayer ? 100. : -100.));
+            else // checkers are blocked
+                return new Tuple<>(board, (maximizingPlayer ? 0. : 0.));
 
         Tuple<List<Cell>, String> nextBoard = possibleBoardStates.get(0);
 
@@ -122,8 +123,9 @@ public class MiniMax {
                     capture.get(), pos, bottomRight, bottomBottomRight, isRed));
         }
 
-        maybeMove(boardState, possibleBoardStates,
-                auxBoard, capture, isRed, row, col, pos, rowEven, topRight, bottomRight);
+        if (!capture.get() && row != MAX_ROW)
+            maybeMove(boardState, possibleBoardStates, auxBoard,
+                    isRed, col, pos, rowEven, topRight, bottomRight);
     }
 
 
@@ -152,21 +154,20 @@ public class MiniMax {
                     capture.get(), pos, bottomLeft, bottomBottomLeft, isRed));
         }
 
-        maybeMove(boardState, possibleBoardStates,
-                auxBoard, capture, isRed, row, col, pos, rowEven, topLeft, bottomLeft);
+        if (!capture.get() && row != MIN_ROW)
+            maybeMove(boardState, possibleBoardStates, auxBoard,
+                    isRed, col, pos, rowEven, topLeft, bottomLeft);
     }
 
 
     private void maybeMove(List<Cell> boardState, List<Tuple<List<Cell>, String>> possibleBoardStates,
-                           Boolean[] auxBoard, AtomicBoolean capture, boolean isRed,
-                           int row, int col, int pos, boolean rowEven, int top, int bottom) {
-        if (!capture.get() && row != (isRed ? MAX_ROW : MIN_ROW)) {
-            if ((col != MIN_COL || rowEven) && isEmpty(top, auxBoard))
-                possibleBoardStates.add(move(boardState, pos, top, isRed));
+                           Boolean[] auxBoard, boolean isRed,
+                           int col, int pos, boolean rowEven, int top, int bottom) {
+        if ((col != MIN_COL || rowEven) && isEmpty(top, auxBoard))
+            possibleBoardStates.add(move(boardState, pos, top, isRed));
 
-            if ((col != MAX_COL || !rowEven) && isEmpty(bottom, auxBoard))
-                possibleBoardStates.add(move(boardState, pos, bottom, isRed));
-        }
+        if ((col != MAX_COL || !rowEven) && isEmpty(bottom, auxBoard))
+            possibleBoardStates.add(move(boardState, pos, bottom, isRed));
     }
 
 
