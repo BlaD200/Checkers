@@ -23,6 +23,9 @@ public class GameData {
     @JsonProperty(value = "available_time")
     private double availableTime;
 
+    @JsonProperty(value = "last_move")
+    private Object lastMove;
+
     @JsonProperty(value = "is_started")
     private boolean isStarted;
 

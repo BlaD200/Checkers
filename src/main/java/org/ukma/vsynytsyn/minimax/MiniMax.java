@@ -18,12 +18,36 @@ public class MiniMax {
     public static final int MIN_COL = 0;
     public static final int MAX_COL = 3;
 
-    private Instant start;
+//    private final ExecutorService executorService;
+//    private int availableThreads = 4;
+
     public long time;
+    private Instant start;
 
 
-    public Tuple<Tuple<List<Cell>, String>, Double> miniMax(Tuple<List<Cell>, String> board, int depth,
-                                                            boolean maximizingPlayer, double alpha, double beta) {
+//    public MiniMax() {
+//        executorService = Executors.newFixedThreadPool(availableThreads);
+//    }
+
+
+//    @Override
+//    protected void finalize() throws Throwable {
+//        super.finalize();
+//        executorService.shutdown();
+//        try {
+//            if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+//                executorService.shutdownNow();
+//            }
+//        } catch (InterruptedException e) {
+//            executorService.shutdownNow();
+//        }
+//    }
+
+
+    public Tuple<Tuple<List<Cell>, String>, Double> miniMax(
+            Tuple<List<Cell>, String> board, int depth,
+            boolean maximizingPlayer, double alpha, double beta
+    ) {
         if (depth == 0 || isTimeOut())
             return new Tuple<>(board, evaluateBoard(board.getFirst()));
 
@@ -42,8 +66,7 @@ public class MiniMax {
             if (isTimeOut())
                 break;
 
-            Tuple<Tuple<List<Cell>, String>, Double> boardEval =
-                    miniMax(state, depth - 1, !maximizingPlayer, alpha, beta);
+            Tuple<Tuple<List<Cell>, String>, Double> boardEval = miniMax(state, depth - 1, !maximizingPlayer, alpha, beta);
             double newEval = boardEval.getSecond();
 
             if (maximizingPlayer) {
