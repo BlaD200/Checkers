@@ -18,9 +18,9 @@ public class GameMiniMax {
 
     private final GameRequests gameRequests;
     private final String teamName;
-    private PlayerColor playerColor;
-
     private final MiniMax miniMax;
+    private int minimaxDepth;
+    private PlayerColor playerColor;
     private List<Cell> board;
     private boolean redPlayer;
 
@@ -33,6 +33,7 @@ public class GameMiniMax {
         this.gameRequests = new GameRequests();
         this.teamName = teamName;
         this.miniMax = new MiniMax();
+        this.minimaxDepth = MINIMAX_DEPTH;
         miniMax.time = 300 * 1000;
         miniMax.resetTime();
     }
@@ -47,23 +48,27 @@ public class GameMiniMax {
             long startStart = System.currentTimeMillis();
             try {
                 GameStatus gameStatus = gameRequests.gameStatus();
-                if (gameStatus.getData().getWinner() != null) { // game is end
-                    System.out.printf("Game finished. Winner: %s\n", gameStatus.getData().getWinner());
+                if ((gameStatus.getData().getWinner() != null &&
+                        !gameStatus.getData().getStatus().equals("Game is playing"))
+                        || gameStatus.getData().getStatus().equals("Game is over")
+                ) { // game is end
+                    System.out.printf("\nGame finished. Winner: %s\n", gameStatus.getData().getWinner());
+                    System.out.println(gameStatus.getData());
                     break;
                 } else if (gameStatus.getData().getWhoseTurn() == playerColor) { // our turn
                     board = gameStatus.getData().getBoard();
                     connectionAttempts = MAX_CONNECTION_ATTEMPTS;
                 } else {
-                    Thread.sleep(10);
+                    Thread.sleep(100);
                     continue;
                 }
             } catch (IOException e) {
-                System.err.println("Something went wrong while requested data from server.");
+                System.err.println("\nSomething went wrong while requested data from server.");
                 System.out.println(e.getMessage());
                 if (--connectionAttempts == 0)
                     throw e;
                 else {
-                    System.out.printf("Trying reconnect... %d\n", connectionAttempts);
+                    System.out.printf("\nTrying reconnect... %d\n", connectionAttempts);
                     continue;
                 }
             } catch (InterruptedException e) {
@@ -75,14 +80,14 @@ public class GameMiniMax {
             miniMax.resetTime();
             Tuple<Tuple<List<Cell>, String>, Double> move = miniMax.miniMax(
                     new Tuple<>(board, ""),
-                    MINIMAX_DEPTH, redPlayer,
+                    minimaxDepth, redPlayer,
                     -100, 100
             );
 
             String moveVal = move.getFirst().getSecond();
             String[] moves = moveVal.trim().split(" ");
             for (String s : moves) {
-//                System.out.printf("%s move: %s\n", playerColor, moveVal);
+                //                System.out.printf("%s move: %s\n", playerColor, moveVal);
                 long beforeMove = System.currentTimeMillis();
                 move(s);
                 long afterMove = System.currentTimeMillis();
@@ -90,7 +95,7 @@ public class GameMiniMax {
 
                 long end = System.currentTimeMillis();
                 long timeForStep = end - start;
-                System.out.printf("%s time for move(%d): %dms (a) | %dms (m) ", playerColor, stepCount, timeForStep,
+                System.out.printf("\n%s time for move(%d): %dms (a) | %dms (m) ", playerColor, stepCount, timeForStep,
                         moveTime);
                 stepMillis += timeForStep;
                 ++stepCount;
@@ -99,17 +104,17 @@ public class GameMiniMax {
 
             long endEnd = System.currentTimeMillis();
             long timeForStep = endEnd - startStart;
-            System.out.printf("| %dms (f)\n", timeForStep);
-//            stepMillis += timeForStep;
-//            ++stepCount;
-//            stepMillisMax = Math.max(stepMillisMax, timeForStep);
+            System.out.printf("| %dms (f)", timeForStep);
+            //            stepMillis += timeForStep;
+            //            ++stepCount;
+            //            stepMillisMax = Math.max(stepMillisMax, timeForStep);
         }
 
         long l = stepMillis / stepCount;
         System.out.printf("\n%s average time for move at depth %d is %d ms\n",
-                playerColor, MINIMAX_DEPTH, l);
+                playerColor, minimaxDepth, l);
         System.out.printf("%s MAX time for move at depth %d is %d ms\n",
-                playerColor, MINIMAX_DEPTH, stepMillisMax);
+                playerColor, minimaxDepth, stepMillisMax);
     }
 
 
@@ -126,9 +131,10 @@ public class GameMiniMax {
                 JoinStatus joinStatus = gameRequests.joinGame(teamName);
                 if (joinStatus == null || !joinStatus.getStatus().equals("success")) {
                     --connectionAttempts;
-                    Thread.sleep(2000);
+                    Thread.sleep(5000);
                     continue;
                 }
+                minimaxDepth = miniMax.time < 1000 ? 10 : MINIMAX_DEPTH;
                 playerColor = joinStatus.getData().getColor();
                 redPlayer = playerColor == PlayerColor.RED;
                 System.out.printf("Joins as %s; %s\n", playerColor, joinStatus);
